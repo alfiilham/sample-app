@@ -1,0 +1,56 @@
+# PR check (dev -> main): build only, status shows on the GitHub PR
+apiVersion: tekton.dev/v1
+kind: PipelineRun
+metadata:
+  name: hello-pr-{{ pull_request_number }}-{{ revision }}
+  annotations:
+    pipelinesascode.tekton.dev/on-cel-expression: >-
+      event == "pull_request" && target_branch == "main"
+    pipelinesascode.tekton.dev/max-keep-runs: "3"
+spec:
+  params:
+    - name: repo_url
+      value: "{{ repo_url }}"
+    - name: revision
+      value: "{{ revision }}"
+  pipelineSpec:
+    params:
+      - name: repo_url
+      - name: revision
+    workspaces:
+      - name: source
+    tasks:
+      - name: fetch
+        taskRef:
+          resolver: cluster
+          params:
+            - {name: kind, value: task}
+            - {name: name, value: git-clone}
+            - {name: namespace, value: openshift-pipelines}
+        params:
+          - {name: URL, value: $(params.repo_url)}
+          - {name: REVISION, value: $(params.revision)}
+        workspaces:
+          - {name: output, workspace: source}
+      - name: build
+        runAfter: [fetch]
+        taskRef:
+          resolver: cluster
+          params:
+            - {name: kind, value: task}
+            - {name: name, value: buildah}
+            - {name: namespace, value: openshift-pipelines}
+        params:
+          - {name: IMAGE, value: "image-registry.openshift-image-registry.svc:5000/cicd-demo/hello:pr-$(params.revision)"}
+          - {name: CONTEXT, value: app}
+          - {name: DOCKERFILE, value: app/Containerfile}
+        workspaces:
+          - {name: source, workspace: source}
+  workspaces:
+    - name: source
+      volumeClaimTemplate:
+        spec:
+          accessModes: [ReadWriteOnce]
+          resources:
+            requests:
+              storage: 1Gi
