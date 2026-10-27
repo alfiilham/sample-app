@@ -3,7 +3,7 @@ import socket
 from http.server import BaseHTTPRequestHandler, HTTPServer
 
 MESSAGE = "Hello from Tekton + Argo CD!"
-COLOR = "#2563eb"
+COLOR = "#dc2626"
 VERSION = os.environ.get("APP_VERSION", "dev")
 
 
