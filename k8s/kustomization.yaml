@@ -7,4 +7,4 @@ resources:
   - route.yaml
 images:
   - name: image-registry.openshift-image-registry.svc:5000/cicd-demo/hello
-    newTag: 6fb3a717f3a2e045e4e4dcb996853608e29f8e1c
+    newTag: 000bdca9cda51a6ae48c8d52d3d43e529bf8c585
